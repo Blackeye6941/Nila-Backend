@@ -1,7 +1,16 @@
-from flask import Flask
+from typing import Optional
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
-app = Flask(__name__)
+app = FastAPI(title="FastAPI Backend", version="1.0.0")
 
-@app.route("/")
-def hello_world():
-    return "<p>Hello, World!</p>"
+# Request body model for validation
+class Item(BaseModel):
+    name: str
+    description: Optional[str] = None
+    price: float
+
+# Root GET route
+@app.get("/")
+def read_root():
+    return {"message": "Hello from FastAPI backend!", "status": "success"}
