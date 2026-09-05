@@ -77,6 +77,23 @@ def run_pipeline(
             print("Table cleared.")
         except Exception as e:
             print(f"Note on table clear: {e}")
+    else:
+        # Check for existing chunks to resume without repeating work
+        print("\nChecking for previously ingested chunks in Supabase...")
+        existing_sigs = vector_store.get_existing_signatures()
+        if existing_sigs:
+            initial_count = len(chunked_docs)
+            chunked_docs = [
+                doc for doc in chunked_docs
+                if f"{doc['metadata'].get('source')}_{doc['metadata'].get('page', doc['metadata'].get('sheet', ''))}_{doc['metadata'].get('chunk_index')}" not in existing_sigs
+            ]
+            skipped = initial_count - len(chunked_docs)
+            print(f"-> Found {len(existing_sigs)} chunks already in Supabase.")
+            print(f"-> Resuming: skipping {skipped} completed chunks, {len(chunked_docs)} chunks remaining to process.")
+
+            if not chunked_docs:
+                print("\nAll documents and chunks are already ingested in Supabase! Nothing to do.")
+                return
 
     # 4. Generate embeddings and upload to Supabase incrementally
     print(f"\n[3/3] Generating embeddings & saving incrementally to Supabase...")

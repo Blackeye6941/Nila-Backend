@@ -46,6 +46,27 @@ class SupabaseVectorStore:
             print(f"RPC match_documents search error: {e}")
             return []
 
+    def get_existing_signatures(self) -> set:
+        """Returns a set of existing chunk signatures (source_page_chunkIndex) to support resuming."""
+        signatures = set()
+        offset = 0
+        limit = 1000
+        try:
+            while True:
+                res = self.client.table(self.table_name).select("metadata").range(offset, offset + limit - 1).execute()
+                if not res.data:
+                    break
+                for row in res.data:
+                    m = row.get("metadata", {})
+                    sig = f"{m.get('source')}_{m.get('page', m.get('sheet', ''))}_{m.get('chunk_index')}"
+                    signatures.add(sig)
+                if len(res.data) < limit:
+                    break
+                offset += limit
+        except Exception as e:
+            print(f"Could not fetch existing signatures: {e}")
+        return signatures
+
     def clear(self, source: Optional[str] = None):
         """Removes all documents or records for a specific source document."""
         query = self.client.table(self.table_name).delete()
