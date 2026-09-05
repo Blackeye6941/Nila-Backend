@@ -6,3 +6,10 @@ pydantic[settings]
 # pytest
 pydantic[email]
 dotenv
+supabase
+google-genai
+pypdf
+openpyxl
+tqdm
+fonttools
+fastembed
